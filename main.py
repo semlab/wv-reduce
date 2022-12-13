@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 import time
@@ -144,7 +145,6 @@ def figure2(analogy_scores, filename="analogies.pdf"):
     plot_styles = [{'marker':'o', 'linestyle':'-', 'color':'darkorange'},
                 {'marker':'^', 'linestyle':'--', 'color':'green'}
                ]
-
     fig, axs = plt.subplots(1, n_models, figsize=(5*n_models, 5))
     for idx_model, model in enumerate(analogies_scores):
         for idx_method, method in enumerate(analogies_scores[model]):
@@ -161,9 +161,21 @@ def figure2(analogy_scores, filename="analogies.pdf"):
     #plt.show()
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--vectors-root', required=True,
+            help="Root path of the saved trained/reduced vectors")
+    args = parser.parse_args()
+    args_dic = {}
+    args_dic['vectors_root'] = args.vectors_root
+    return args_dic
+
+
 if __name__ == "__main__":
+    args = get_args()
     #load the vectors
     # TODO give the root path as an arg
-    glove_kvecs_store = load_keyedvectors('/home/gr0259sh/Projects/devel/exp2210/out/glove')
-    cbow_kvecs_store = load_keyedvectors('/home/gr0259sh/Projects/devel/exp2210/out/cbow')
-    skipgram_kvecs_store = load_keyedvectors('/home/gr0259sh/Projects/devel/exp2210/out/skipgram') 
+    # '/home/gr0259sh/Projects/devel/exp2210/out/glove'
+    glove_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'glove')
+    cbow_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'cbow')
+    skipgram_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram')
