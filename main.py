@@ -176,6 +176,77 @@ if __name__ == "__main__":
     #load the vectors
     # TODO give the root path as an arg
     # '/home/gr0259sh/Projects/devel/exp2210/out/glove'
-    glove_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'glove')
-    cbow_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'cbow')
-    skipgram_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram')
+    glove_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'glove'))
+    cbow_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'cbow'))
+    skipgram_kvecs_store = load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram'))
+
+    men_df = pd.read_csv("data/MEN/MEN_dataset_natural_form_full", sep=" ", header=None)
+    men_df.rename(columns={0: 'w1', 1:'w2', 2:'similarity'}, inplace=True)
+    print(f'Loaded: {men_df.shape}')
+    men_df = men_df[(men_df['w1'].isin(vocab))  & (men_df['w2'].isin(vocab))]
+    print(f'Filtered: {men_df.shape}')
+    men_df.head()
+
+    simlex_df = pd.read_csv("data/SimLex-999/SimLex-999.txt", sep="\t")
+    print(f'Loaded: {simlex_df.shape}')
+    simlex_df = simlex_df[(simlex_df['word1'].isin(vocab)) & (simlex_df['word2'].isin(vocab))]
+    print(f'Filtered: {simlex_df.shape}')
+    simlex_df.head()
+
+    wordsim_df = pd.read_csv("data/wordsim353_sim_rel/wordsim_similarity_goldstandard.txt", sep='\t', header=None)
+    wordsim_df.rename(columns={0: 'word1', 1:'word2', 2:'similarity'}, inplace=True)
+    print(f'Loaded: {wordsim_df.shape}')
+    wordsim_df = wordsim_df[(wordsim_df['word1'].isin(vocab)) & (wordsim_df['word2'].isin(vocab))]
+    print(f'Filtered: {wordsim_df.shape}')
+    wordsim_df.head()
+
+    men_pairs = [(w1, w2) for w1, w2 in zip(men_df['w1'], men_df['w2'])]
+    simlex_pairs = [(w1, w2) for w1, w2 in zip(simlex_df['word1'], simlex_df['word2'])]
+    wordsim_pairs = [(w1, w2) for w1, w2 in zip(wordsim_df['word1'], wordsim_df['word2'])]
+
+
+    # correlation scores
+    correlation_scores['cbow'] = {}
+    correlation_scores['cbow']['men'] = {}
+    correlation_scores['cbow']['men']['train'] = sim_correlations(men_pairs, men_scores, cbow_trained_kvecs)
+    correlation_scores['cbow']['men']['pca'] = sim_correlations(men_pairs, men_scores, cbow_reduced_kvecs_500)
+    correlation_scores['cbow']['simlex'] = {}
+    correlation_scores['cbow']['simlex']['train'] = sim_correlations(simlex_pairs, simlex_scores, cbow_trained_kvecs)
+    correlation_scores['cbow']['simlex']['pca'] = sim_correlations(simlex_pairs, simlex_scores, cbow_reduced_kvecs_500)
+    correlation_scores['cbow']['wordsim'] = {}
+    correlation_scores['cbow']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, cbow_trained_kvecs)
+    correlation_scores['cbow']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, cbow_reduced_kvecs_500)
+    correlation_scores['skipgram'] = {}
+    correlation_scores['skipgram']['men'] = {}
+    correlation_scores['skipgram']['men']['train'] = sim_correlations(men_pairs, men_scores, skipgram_trained_kvecs)
+    correlation_scores['skipgram']['men']['pca'] = sim_correlations(men_pairs, men_scores, skipgram_reduced_kvecs_500)
+    correlation_scores['skipgram']['simlex'] = {}
+    correlation_scores['skipgram']['simlex']['train'] = sim_correlations(simlex_pairs, simlex_scores, skipgram_trained_kvecs)
+    correlation_scores['skipgram']['simlex']['pca'] = sim_correlations(simlex_pairs, simlex_scores, skipgram_reduced_kvecs_500)
+    correlation_scores['skipgram']['wordsim'] = {}
+    correlation_scores['skipgram']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, skipgram_trained_kvecs)
+    correlation_scores['skipgram']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, skipgram_reduced_kvecs_500)
+    correlation_scores['glove'] = {}
+    correlation_scores['glove']['men'] = {}
+    correlation_scores['glove']['men']['train'] = sim_correlations(men_pairs, men_scores, glove_trained_kvecs)
+    correlation_scores['glove']['men']['pca'] = sim_correlations(men_pairs, men_scores, glove_reduced_kvecs_500)
+    correlation_scores['glove']['simlex'] = {}
+    correlation_scores['glove']['simlex']['train'] = sim_correlations(simlex_pairs, simlex_scores, glove_trained_kvecs)
+    correlation_scores['glove']['simlex']['pca'] = sim_correlations(simlex_pairs, simlex_scores, glove_reduced_kvecs_500)
+    correlation_scores['glove']['wordsim'] = {}
+    correlation_scores['glove']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_trained_kvecs)
+    correlation_scores['glove']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_reduced_kvecs_500)
+    # TODO call correl figure
+
+    # analogies scores
+    analogies_scores = {}
+    analogies_scores['cbow'] = {}
+    analogies_scores['cbow']['train'] = analogy_accuracies(qa_df, cbow_trained_kvecs)
+    analogies_scores['cbow']['pca'] = analogy_accuracies(qa_df, cbow_reduced_kvecs_500)
+    analogies_scores['skipgram'] = {}
+    analogies_scores['skipgram']['train'] = analogy_accuracies(qa_df, skipgram_trained_kvecs)
+    analogies_scores['skipgram']['pca'] = analogy_accuracies(qa_df, skipgram_reduced_kvecs_500)
+    analogies_scores['glove'] = {}
+    analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs)
+    analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500)
+    # TODO call analogy  figure
