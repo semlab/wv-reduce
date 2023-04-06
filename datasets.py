@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from gensim.models import KeyedVectors
 
 
 
@@ -90,3 +91,37 @@ def load_word2vec_qa(filepath, vocab=None, lower=True):
             & qa_df['answer'].isin(vocab)
         ]
     return qa_df
+
+
+def load_keyedvectors(root, name=None, dimensions=None, no_header=False):
+    """
+    Load the trained vectors of a particular model into a nested dictionary
+    :param root: the root path of the trained and and reduced vectors of a 
+        particular word vector model. the root path hierachy follows the 
+    :param name: the name of the model
+    :param dimensions: the list of vector dimensions for different trained 
+        instances
+    """
+    # TODO explain the the hierarchy of the root path 
+    if name is None: name = os.path.basename(root.rstrip('/'))
+    if dimensions is None: dimensions = list(range(50, 550,50))
+    kvecs_store = {}
+    for idx, dimension in enumerate(dimensions):
+        filepath_train = os.path.join(root, 'train', f'{name}-{dimension}.txt')
+        if not os.path.exists(filepath_train): 
+            print(f"Skipping {filepath_train}")
+            continue
+        kvecs_store[dimension] = {}
+        kvecs_store[dimension]['train'] = KeyedVectors.load_word2vec_format(filepath_train, no_header=no_header)
+        if os.path.exists(os.path.join(root, 'pca')):
+            kvecs_store[dimension]['pca'] = {}
+            reduced_dims = [reduced_dim for reduced_dim in dimensions if reduced_dim < dimension]
+            for reduced_dim in reduced_dims:
+                filepath_reduced = os.path.join(root, 'pca', f'{name}-{dimension}-pca-{reduced_dim}.txt')
+                if not os.path.exists(filepath_reduced): 
+                    print(f"Skipping {filepath_reduced}")
+                    continue
+                kvecs_store[dimension]['pca'][reduced_dim] = KeyedVectors.load_word2vec_format(filepath_reduced)#, no_header=True)
+        else:
+            print("No PCA folder found...")
+    return kvecs_store

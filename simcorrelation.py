@@ -64,17 +64,38 @@ def plot_similarities(correlation_scores, filename='correlations.pdf'):
 
 
 if __name__ == "__main__":
+    args = {}
+    #load the vectors
+    # TODO give the root path as an arg
+    args['vectors_root'] = './out'
+    print("loading glove vectors...")
+    glove_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'glove'), no_header=True)
+    print("loading cbow vectors...")
+    cbow_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'cbow'))
+    print("loading skipgram vectors...")
+    skipgram_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram'))
     # vocab
     kvecs = KeyedVectors.load_word2vec_format(datapath(f'/home/gr0259sh/Projects/opensrc/word2vec/data/text8-wv-50.txt'), binary=False)
     vocab = kvecs.index_to_key
     # correlation scores
-    men_df = ds.load_men("data/MEN/MEN_dataset_natural_form_full")
-    simlex_df = ds.load_simlex("data/SimLex-999/SimLex-999.txt")
-    wordsim_df = ds.load_wordsim("data/wordsim353_sim_rel/wordsim_similarity_goldstandard.txt")
+    men_df = ds.load_men("data/MEN/MEN_dataset_natural_form_full", vocab=vocab)
+    simlex_df = ds.load_simlex("data/SimLex-999/SimLex-999.txt", vocab=vocab)
+    wordsim_df = ds.load_wordsim("data/wordsim353_sim_rel/wordsim_similarity_goldstandard.txt", vocab=vocab)
     men_pairs = [(w1, w2) for w1, w2 in zip(men_df['w1'], men_df['w2'])]
     simlex_pairs = [(w1, w2) for w1, w2 in zip(simlex_df['word1'], simlex_df['word2'])]
-    wordsim_pairs = [(w1, w2) for w1, w2 in zip(wordsim_df['word1'], wordsim_df['word2'])
+    wordsim_pairs = [(w1, w2) for w1, w2 in zip(wordsim_df['word1'], wordsim_df['word2'])]
+    men_scores = [float(score) for score in men_df['similarity']]
+    simlex_scores = [float(score) for score in  simlex_df['SimLex999']]
+    wordsim_scores = [float(score) for score in wordsim_df['similarity']]
 
+    glove_trained_kvecs = [glove_kvecs_store[dim]['train'] for dim in glove_kvecs_store]
+    glove_reduced_kvecs_500 = [glove_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in glove_kvecs_store[500]['pca']]
+    skipgram_trained_kvecs = [skipgram_kvecs_store[dim]['train'] for dim in skipgram_kvecs_store]
+    skipgram_reduced_kvecs_500 = [skipgram_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in skipgram_kvecs_store[500]['pca']]
+    cbow_trained_kvecs = [cbow_kvecs_store[dim]['train'] for dim in cbow_kvecs_store]
+    cbow_reduced_kvecs_500 = [cbow_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in cbow_kvecs_store[500]['pca']]
+
+    correlation_scores = {}
     correlation_scores['cbow'] = {}
     correlation_scores['cbow']['men'] = {}
     correlation_scores['cbow']['men']['train'] = sim_correlations(men_pairs, men_scores, cbow_trained_kvecs)
@@ -106,5 +127,5 @@ if __name__ == "__main__":
     correlation_scores['glove']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_trained_kvecs)
     correlation_scores['glove']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_reduced_kvecs_500)
 
-    plot_similarities(correlation_scores):
+    plot_similarities(correlation_scores)
     # TODO todo add args output
