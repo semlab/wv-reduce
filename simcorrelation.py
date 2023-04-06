@@ -13,7 +13,6 @@ from gensim.test.utils import datapath
 import datasets as ds
 # TODO remove unused libraries
 
-# Figure for the similarity correlation
 
 
 def sim_correlation(wordpairs, arg1, arg2):
@@ -65,6 +64,9 @@ def plot_similarities(correlation_scores, filename='correlations.pdf'):
 
 
 if __name__ == "__main__":
+    # vocab
+    kvecs = KeyedVectors.load_word2vec_format(datapath(f'/home/gr0259sh/Projects/opensrc/word2vec/data/text8-wv-50.txt'), binary=False)
+    vocab = kvecs.index_to_key
     # correlation scores
     men_df = ds.load_men("data/MEN/MEN_dataset_natural_form_full")
     simlex_df = ds.load_simlex("data/SimLex-999/SimLex-999.txt")

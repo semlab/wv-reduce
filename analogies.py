@@ -1,4 +1,24 @@
 
+import datasets as ds
+
+
+def analogy_scores(qa_df, kvectors): 
+    top_answers = [kvectors.most_similar(positive=[seed2, question], negative=[seed1], topn=1) 
+                    for seed1, seed2, question in zip(qa_df['seed1'], qa_df['seed2'], qa_df['question'])]
+    corrects = [top_answer[0][0] == answer for top_answer, answer in zip(top_answers, qa_df['answer'])]
+    scores = list(map(int, corrects))
+    return scores
+
+
+def analogy_accuracies(qa_df, kvecs_list):
+    accuracies = {}
+    for kvecs in kvecs_list:
+        dim = len(kvecs[0])
+        scores = analogy_scores(qa_df, kvecs)
+        accuracy = sum(scores)/len(scores)
+        accuracies[dim] = accuracy
+    return accuracies
+
 
 def plot_analogies(analogy_scores, filename="analogies.pdf"):
     """
@@ -24,10 +44,23 @@ def plot_analogies(analogy_scores, filename="analogies.pdf"):
             # TODO grid, share axis? 
     fig.tight_layout()
     plt.savefig('figs/analogies.pdf')
-    #plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":
+    #vocab
+    kvecs = KeyedVectors.load_word2vec_format(datapath(f'/home/gr0259sh/Projects/opensrc/word2vec/data/text8-wv-50.txt'), binary=False)
+    vocab = kvecs.index_to_key
+
+    qa_df = ds.load_word2vec_qa("../data/questions-words.txt")
+    semantic_qa = ['capital-common-countries', 'capital-world', 'currency',
+       'city-in-state', 'family']
+    syntactic_qa = ['gram1-adjective-to-adverb',
+       'gram2-opposite', 'gram3-comparative', 'gram4-superlative',
+       'gram5-present-participle', 'gram6-nationality-adjective',
+       'gram7-past-tense', 'gram8-plural', 'gram9-plural-verbs']
+    qa_semantic_df = qa_df[qa_df['category'].isin(semantic_qa)]
+    qa_syntactic_df = qa_df[qa_df['category'].isin(syntactic_qa)]
     # analogies scores
     analogies_scores = {}
     analogies_scores['cbow'] = {}

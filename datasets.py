@@ -1,4 +1,5 @@
-
+import os
+import pandas as pd
 
 
 
@@ -57,3 +58,35 @@ def load_wordsim(filepath, vocab=None):
         wordsim_df = wordsim_df[(wordsim_df['word1'].isin(vocab)) & (wordsim_df['word2'].isin(vocab))]
         print(f'Filtered: {wordsim_df.shape}')
     return wordsim_df
+
+
+def load_word2vec_qa(filepath, vocab=None, lower=True):
+    datad = dict()
+    datad['category'] = []
+    datad['seed1'] = []
+    datad['seed2'] = []
+    datad['question'] = []
+    datad['answer'] = []
+    with open(filepath) as f:
+        category = None
+        for line in f:
+            split = line.split()
+            if split[0] == ':':
+                category = split[1]
+            elif len(split) == 4 and category is not None:
+                datad['category'].append(category)
+                datad['seed1'].append(split[0])
+                datad['seed2'].append(split[1])
+                datad['question'].append(split[2])
+                datad['answer'].append(split[3])
+    qa_df = pd.DataFrame.from_dict(datad)
+    if lower:
+        qa_df = qa_df.apply(lambda x: x.astype(str).str.lower())
+    if vocab is not None:
+        vocab = kvecs.index_to_key
+        qa_df = qa_df[qa_df['seed1'].isin(vocab) 
+            & qa_df['seed2'].isin(vocab) 
+            & qa_df['question'].isin(vocab) 
+            & qa_df['answer'].isin(vocab)
+        ]
+    return qa_df
