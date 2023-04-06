@@ -135,8 +135,9 @@ def figure1(correlation_scores, filename='correlations.pdf'):
 
 
 
-def figure2(analogy_scores, filename="analogies.pdf"):
+def plot_analogies(analogy_scores, filename="analogies.pdf"):
     """
+    Plot figure for analogies.
     :param analogy_scores: nested dictionary storing analogy scores
         by model then trained ('train') or reduced ('reduced')
     """
