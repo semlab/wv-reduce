@@ -1,5 +1,17 @@
+import argparse
+import math
+import os
+import time
+import numpy as np
+import pandas as pd
+import gensim
+import matplotlib.pyplot as plt
+from scipy import stats
+from gensim.models import KeyedVectors
+from gensim.test.utils import datapath
 
 import datasets as ds
+
 
 
 def analogy_scores(qa_df, kvectors): 
@@ -43,16 +55,33 @@ def plot_analogies(analogy_scores, filename="analogies.pdf"):
             axs[idx_model].set_title(f'{model}')
             # TODO grid, share axis? 
     fig.tight_layout()
-    plt.savefig('figs/analogies.pdf')
+    plt.savefig(filename)
     plt.show()
 
 
 if __name__ == "__main__":
-    #vocab
+    args = {}
+    #load the vectors
+    # TODO give the root path as an arg
+    args['vectors_root'] = './out'
+    print("loading glove vectors...")
+    glove_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'glove'))#, no_header=True)
+    print("loading cbow vectors...")
+    cbow_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'cbow'))
+    print("loading skipgram vectors...")
+    skipgram_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram'))
+    # vocab
     kvecs = KeyedVectors.load_word2vec_format(datapath(f'/home/gr0259sh/Projects/opensrc/word2vec/data/text8-wv-50.txt'), binary=False)
     vocab = kvecs.index_to_key
+    # Loading datasets
+    men_df = ds.load_men("data/MEN/MEN_dataset_natural_form_full", vocab=vocab)
+    simlex_df = ds.load_simlex("data/SimLex-999/SimLex-999.txt", vocab=vocab)
+    wordsim_df = ds.load_wordsim("data/wordsim353_sim_rel/wordsim_similarity_goldstandard.txt", vocab=vocab)
+    men_pairs = [(w1, w2) for w1, w2 in zip(men_df['w1'], men_df['w2'])]
+    simlex_pairs = [(w1, w2) for w1, w2 in zip(simlex_df['word1'], simlex_df['word2'])]
+    wordsim_pairs = [(w1, w2) for w1, w2 in zip(wordsim_df['word1'], wordsim_df['word2'])]
 
-    qa_df = ds.load_word2vec_qa("../data/questions-words.txt")
+    qa_df = ds.load_word2vec_qa("./data/questions-words.txt")
     semantic_qa = ['capital-common-countries', 'capital-world', 'currency',
        'city-in-state', 'family']
     syntactic_qa = ['gram1-adjective-to-adverb',
@@ -61,6 +90,14 @@ if __name__ == "__main__":
        'gram7-past-tense', 'gram8-plural', 'gram9-plural-verbs']
     qa_semantic_df = qa_df[qa_df['category'].isin(semantic_qa)]
     qa_syntactic_df = qa_df[qa_df['category'].isin(syntactic_qa)]
+    # loading word vectors
+    glove_trained_kvecs = [glove_kvecs_store[dim]['train'] for dim in glove_kvecs_store]
+    glove_reduced_kvecs_500 = [glove_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in glove_kvecs_store[500]['pca']]
+    skipgram_trained_kvecs = [skipgram_kvecs_store[dim]['train'] for dim in skipgram_kvecs_store]
+    skipgram_reduced_kvecs_500 = [skipgram_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in skipgram_kvecs_store[500]['pca']]
+    cbow_trained_kvecs = [cbow_kvecs_store[dim]['train'] for dim in cbow_kvecs_store]
+    cbow_reduced_kvecs_500 = [cbow_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in cbow_kvecs_store[500]['pca']]
+
     # analogies scores
     analogies_scores = {}
     analogies_scores['cbow'] = {}
@@ -73,3 +110,4 @@ if __name__ == "__main__":
     analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs)
     analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500)
     # TODO call analogy  figure
+    plot_analogies(analogies_scores)

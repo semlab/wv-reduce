@@ -93,7 +93,7 @@ def load_word2vec_qa(filepath, vocab=None, lower=True):
     return qa_df
 
 
-def load_keyedvectors(root, name=None, dimensions=None, no_header=False):
+def load_keyedvectors(root, name=None, dimensions=None):#, no_header=False):
     """
     Load the trained vectors of a particular model into a nested dictionary
     :param root: the root path of the trained and and reduced vectors of a 
@@ -103,6 +103,14 @@ def load_keyedvectors(root, name=None, dimensions=None, no_header=False):
         instances
     """
     # TODO explain the the hierarchy of the root path 
+    def has_no_header(filepath):
+        with open(filepath,'r') as f:
+            line1 = f.readline()
+            line2 = f.readline()
+            if len(line1.split()) == len(line2.split()):
+                return True
+        return False
+
     if name is None: name = os.path.basename(root.rstrip('/'))
     if dimensions is None: dimensions = list(range(50, 550,50))
     kvecs_store = {}
@@ -111,8 +119,9 @@ def load_keyedvectors(root, name=None, dimensions=None, no_header=False):
         if not os.path.exists(filepath_train): 
             print(f"Skipping {filepath_train}")
             continue
+        
         kvecs_store[dimension] = {}
-        kvecs_store[dimension]['train'] = KeyedVectors.load_word2vec_format(filepath_train, no_header=no_header)
+        kvecs_store[dimension]['train'] = KeyedVectors.load_word2vec_format(filepath_train, no_header=has_no_header(filepath_train))
         if os.path.exists(os.path.join(root, 'pca')):
             kvecs_store[dimension]['pca'] = {}
             reduced_dims = [reduced_dim for reduced_dim in dimensions if reduced_dim < dimension]
@@ -121,7 +130,7 @@ def load_keyedvectors(root, name=None, dimensions=None, no_header=False):
                 if not os.path.exists(filepath_reduced): 
                     print(f"Skipping {filepath_reduced}")
                     continue
-                kvecs_store[dimension]['pca'][reduced_dim] = KeyedVectors.load_word2vec_format(filepath_reduced)#, no_header=True)
+                kvecs_store[dimension]['pca'][reduced_dim] = KeyedVectors.load_word2vec_format(filepath_reduced, no_header=has_no_header(filepath_reduced))
         else:
             print("No PCA folder found...")
     return kvecs_store
