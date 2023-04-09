@@ -1,6 +1,8 @@
 import argparse
 import math
 import os
+import multiprocessing as mp
+import itertools as it
 import time
 import numpy as np
 import pandas as pd
@@ -22,14 +24,30 @@ def analogy_scores(qa_df, kvectors):
     return scores
 
 
-def analogy_accuracies(qa_df, kvecs_list):
-    accuracies = {}
-    for kvecs in kvecs_list:
+def analogy_accuracies(qa_df, kvecs_list, nb_workers=5, verbose=False):
+    #accuracies = {}
+    def compute_accuracy(df, kvecs, verbose):
         dim = len(kvecs[0])
+        if verbose: print(f"Computing analogy scores for {dim}")
         scores = analogy_scores(qa_df, kvecs)
-        accuracy = sum(scores)/len(scores)
-        accuracies[dim] = accuracy
-    return accuracies
+        return (sum(scores)/len(scores), dim)
+
+    kvecs_count = len(kvecs_list)
+    workers_completed = 0
+    workers_togo = kvecs_count - workers_completed
+    workers_count = nb_workers if workers_togo > nb_workers else workers_togo
+    with mp.Pool(nb_workers) as pool:
+        results = pool.starmap(compute_accuracy, 
+                zip(it.repeat(qa_df), kvecs_list))
+    accuracies = {dim: score for score, dim in results}
+
+
+    #for kvecs in kvecs_list:
+    #    dim = len(kvecs[0])
+    #    scores = analogy_scores(qa_df, kvecs)
+    #    accuracy = sum(scores)/len(scores)
+    #    accuracies[dim] = accuracy
+    #return accuracies
 
 
 def plot_analogies(analogy_scores, filename="analogies.pdf"):
@@ -39,7 +57,7 @@ def plot_analogies(analogy_scores, filename="analogies.pdf"):
         by model then trained ('train') or reduced ('reduced')
     """
     dimensions = list(range(0,550,50))
-    n_models = len(correlation_scores)
+    n_models = len(analogy_scores)
     plot_styles = [{'marker':'o', 'linestyle':'-', 'color':'darkorange'},
                 {'marker':'^', 'linestyle':'--', 'color':'green'}
                ]
@@ -90,17 +108,18 @@ if __name__ == "__main__":
     skipgram_reduced_kvecs_500 = [skipgram_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in skipgram_kvecs_store[500]['pca']]
     cbow_trained_kvecs = [cbow_kvecs_store[dim]['train'] for dim in cbow_kvecs_store]
     cbow_reduced_kvecs_500 = [cbow_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in cbow_kvecs_store[500]['pca']]
-
+    print("here")
     # analogies scores
     analogies_scores = {}
     analogies_scores['cbow'] = {}
-    analogies_scores['cbow']['train'] = analogy_accuracies(qa_df, cbow_trained_kvecs)
-    analogies_scores['cbow']['pca'] = analogy_accuracies(qa_df, cbow_reduced_kvecs_500)
+    analogies_scores['cbow']['train'] = analogy_accuracies(qa_df, cbow_trained_kvecs, verbose=True)
+    analogies_scores['cbow']['pca'] = analogy_accuracies(qa_df, cbow_reduced_kvecs_500, verbose=True)
     analogies_scores['skipgram'] = {}
-    analogies_scores['skipgram']['train'] = analogy_accuracies(qa_df, skipgram_trained_kvecs)
-    analogies_scores['skipgram']['pca'] = analogy_accuracies(qa_df, skipgram_reduced_kvecs_500)
+    analogies_scores['skipgram']['train'] = analogy_accuracies(qa_df, skipgram_trained_kvecs, verbose=True)
+    analogies_scores['skipgram']['pca'] = analogy_accuracies(qa_df, skipgram_reduced_kvecs_500, verbose=True)
     analogies_scores['glove'] = {}
-    analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs)
-    analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500)
+    analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs, verbose=True)
+    analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500, verbose=True)
+
     # TODO call analogy  figure
     plot_analogies(analogies_scores)

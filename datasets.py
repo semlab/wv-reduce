@@ -110,7 +110,7 @@ def load_keyedvectors(root, name=None, dimensions=None, verbose=False):#, no_hea
             if len(line1.split()) == len(line2.split()):
                 return True
         return False
-    if verbose: print(f"Loading {name}...")
+    if verbose: print(f"Loading {root}...")
     if name is None: name = os.path.basename(root.rstrip('/'))
     if dimensions is None: dimensions = list(range(50, 550,50))
     kvecs_store = {}
@@ -128,7 +128,7 @@ def load_keyedvectors(root, name=None, dimensions=None, verbose=False):#, no_hea
             reduced_dims = [reduced_dim for reduced_dim in dimensions if reduced_dim < dimension]
             for reduced_dim in reduced_dims:
                 filepath_reduced = os.path.join(root, 'pca', f'{name}-{dimension}-pca-{reduced_dim}.txt')
-                if verbose: print(f"pca {name}, {dimension} dimension.")
+                if verbose: print(f"pca {name}, {reduced_dim} dimension.")
                 if not os.path.exists(filepath_reduced): 
                     print(f"Skipping {filepath_reduced}")
                     continue
