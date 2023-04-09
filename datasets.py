@@ -84,7 +84,6 @@ def load_word2vec_qa(filepath, vocab=None, lower=True):
     if lower:
         qa_df = qa_df.apply(lambda x: x.astype(str).str.lower())
     if vocab is not None:
-        vocab = kvecs.index_to_key
         qa_df = qa_df[qa_df['seed1'].isin(vocab) 
             & qa_df['seed2'].isin(vocab) 
             & qa_df['question'].isin(vocab) 
@@ -93,7 +92,7 @@ def load_word2vec_qa(filepath, vocab=None, lower=True):
     return qa_df
 
 
-def load_keyedvectors(root, name=None, dimensions=None):#, no_header=False):
+def load_keyedvectors(root, name=None, dimensions=None, verbose=False):#, no_header=False):
     """
     Load the trained vectors of a particular model into a nested dictionary
     :param root: the root path of the trained and and reduced vectors of a 
@@ -101,6 +100,7 @@ def load_keyedvectors(root, name=None, dimensions=None):#, no_header=False):
     :param name: the name of the model
     :param dimensions: the list of vector dimensions for different trained 
         instances
+    :param verbose: to see message
     """
     # TODO explain the the hierarchy of the root path 
     def has_no_header(filepath):
@@ -110,12 +110,13 @@ def load_keyedvectors(root, name=None, dimensions=None):#, no_header=False):
             if len(line1.split()) == len(line2.split()):
                 return True
         return False
-
+    if verbose: print(f"Loading {name}...")
     if name is None: name = os.path.basename(root.rstrip('/'))
     if dimensions is None: dimensions = list(range(50, 550,50))
     kvecs_store = {}
     for idx, dimension in enumerate(dimensions):
         filepath_train = os.path.join(root, 'train', f'{name}-{dimension}.txt')
+        if verbose: print(f"train {name}, {dimension} dimension.")
         if not os.path.exists(filepath_train): 
             print(f"Skipping {filepath_train}")
             continue
@@ -127,10 +128,12 @@ def load_keyedvectors(root, name=None, dimensions=None):#, no_header=False):
             reduced_dims = [reduced_dim for reduced_dim in dimensions if reduced_dim < dimension]
             for reduced_dim in reduced_dims:
                 filepath_reduced = os.path.join(root, 'pca', f'{name}-{dimension}-pca-{reduced_dim}.txt')
+                if verbose: print(f"pca {name}, {dimension} dimension.")
                 if not os.path.exists(filepath_reduced): 
                     print(f"Skipping {filepath_reduced}")
                     continue
                 kvecs_store[dimension]['pca'][reduced_dim] = KeyedVectors.load_word2vec_format(filepath_reduced, no_header=has_no_header(filepath_reduced))
         else:
             print("No PCA folder found...")
+    if verbose: print(f"Loading {name} completed.")
     return kvecs_store
