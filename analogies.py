@@ -65,11 +65,11 @@ if __name__ == "__main__":
     # TODO give the root path as an arg
     args['vectors_root'] = './out'
     print("loading glove vectors...")
-    glove_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'glove'))#, no_header=True)
+    glove_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'glove'), verbose=True)#, no_header=True)
     print("loading cbow vectors...")
-    cbow_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'cbow'))
+    cbow_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'cbow'), verbose=True)
     print("loading skipgram vectors...")
-    skipgram_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram'))
+    skipgram_kvecs_store = ds.load_keyedvectors(os.path.join(args['vectors_root'], 'skipgram'), verbose=True)
     # vocab
     kvecs = KeyedVectors.load_word2vec_format(datapath(f'/home/gr0259sh/Projects/opensrc/word2vec/data/text8-wv-50.txt'), binary=False)
     vocab = kvecs.index_to_key
