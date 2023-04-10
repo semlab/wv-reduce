@@ -24,22 +24,25 @@ def analogy_scores(qa_df, kvectors):
     return scores
 
 
+
+#def compute_accuracy(df, kvecs, verbose=False):
+def compute_accuracy(df, kvecs, verbose=True):
+    dim = len(kvecs[0])
+    if verbose: print(f"Computing analogy scores for {dim}")
+    scores = analogy_scores(qa_df, kvecs)
+    return (sum(scores)/len(scores), dim)
+
+
 def analogy_accuracies(qa_df, kvecs_list, nb_workers=5, verbose=False):
     #accuracies = {}
-    def compute_accuracy(df, kvecs, verbose):
-        dim = len(kvecs[0])
-        if verbose: print(f"Computing analogy scores for {dim}")
-        scores = analogy_scores(qa_df, kvecs)
-        return (sum(scores)/len(scores), dim)
-
     kvecs_count = len(kvecs_list)
     workers_completed = 0
     workers_togo = kvecs_count - workers_completed
     workers_count = nb_workers if workers_togo > nb_workers else workers_togo
     with mp.Pool(nb_workers) as pool:
-        results = pool.starmap(compute_accuracy, 
-                zip(it.repeat(qa_df), kvecs_list))
+        results = pool.starmap(compute_accuracy, zip(it.repeat(qa_df), kvecs_list))
     accuracies = {dim: score for score, dim in results}
+    return accuracies
 
 
     #for kvecs in kvecs_list:
@@ -50,20 +53,21 @@ def analogy_accuracies(qa_df, kvecs_list, nb_workers=5, verbose=False):
     #return accuracies
 
 
-def plot_analogies(analogy_scores, filename="analogies.pdf"):
+def plot_analogies(analogies_scores, filename="analogies.pdf"):
     """
     Plot figure for analogies.
     :param analogy_scores: nested dictionary storing analogy scores
         by model then trained ('train') or reduced ('reduced')
     """
     dimensions = list(range(0,550,50))
-    n_models = len(analogy_scores)
+    n_models = len(analogies_scores)
     plot_styles = [{'marker':'o', 'linestyle':'-', 'color':'darkorange'},
                 {'marker':'^', 'linestyle':'--', 'color':'green'}
                ]
     fig, axs = plt.subplots(1, n_models, figsize=(5*n_models, 5))
     for idx_model, model in enumerate(analogies_scores):
         for idx_method, method in enumerate(analogies_scores[model]):
+            print(f"plotting {model}, {method}")
             x = analogies_scores[model][method].keys()
             y = analogies_scores[model][method].values()
             #axs[idx_dataset, idx_model].grid(visible=True)#, axis='x')
@@ -113,6 +117,8 @@ if __name__ == "__main__":
     analogies_scores = {}
     analogies_scores['cbow'] = {}
     analogies_scores['cbow']['train'] = analogy_accuracies(qa_df, cbow_trained_kvecs, verbose=True)
+    print(type(analogies_scores['cbow']['train']))
+    print(analogies_scores['cbow']['train']) 
     analogies_scores['cbow']['pca'] = analogy_accuracies(qa_df, cbow_reduced_kvecs_500, verbose=True)
     analogies_scores['skipgram'] = {}
     analogies_scores['skipgram']['train'] = analogy_accuracies(qa_df, skipgram_trained_kvecs, verbose=True)

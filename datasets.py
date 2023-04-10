@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 from gensim.models import KeyedVectors
 
@@ -137,3 +138,19 @@ def load_keyedvectors(root, name=None, dimensions=None, verbose=False):#, no_hea
             print("No PCA folder found...")
     if verbose: print(f"Loading {name} completed.")
     return kvecs_store
+
+
+def sample_analogies_scores():
+    # analogies scores
+    dimensions = list(range(0,500,50))
+    analogies_scores = {}
+    analogies_scores['cbow'] = {}
+    analogies_scores['cbow']['train'] = {k:v for k,v in zip(dimensions, np.random.rand(10,1))}
+    analogies_scores['cbow']['pca'] = {k:v for k,v in zip(dimensions[:-1], np.random.rand(9,1))}
+    analogies_scores['skipgram'] = {}
+    analogies_scores['skipgram']['train'] = {k:v for k,v in zip(dimensions, np.random.rand(10,1))}
+    analogies_scores['skipgram']['pca'] = {k:v for k,v in zip(dimensions[:-1], np.random.rand(9,1))}
+    analogies_scores['glove'] = {}
+    analogies_scores['glove']['train'] ={k:v for k,v in zip(dimensions, np.random.rand(10,1))}
+    analogies_scores['glove']['pca'] = {k:v for k,v in zip(dimensions[:-1], np.random.rand(9,1))}
+    return analogies_scores
