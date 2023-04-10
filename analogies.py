@@ -53,7 +53,7 @@ def analogy_accuracies(qa_df, kvecs_list, nb_workers=5, verbose=False):
     #return accuracies
 
 
-def plot_analogies(analogies_scores, filename="analogies.pdf"):
+def plot_analogies(analogies_scores, filename="figs/analogies.png"):
     """
     Plot figure for analogies.
     :param analogy_scores: nested dictionary storing analogy scores
@@ -112,7 +112,6 @@ if __name__ == "__main__":
     skipgram_reduced_kvecs_500 = [skipgram_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in skipgram_kvecs_store[500]['pca']]
     cbow_trained_kvecs = [cbow_kvecs_store[dim]['train'] for dim in cbow_kvecs_store]
     cbow_reduced_kvecs_500 = [cbow_kvecs_store[500]['pca'][reduced_dim] for reduced_dim in cbow_kvecs_store[500]['pca']]
-    print("here")
     # analogies scores
     analogies_scores = {}
     analogies_scores['cbow'] = {}
@@ -126,6 +125,4 @@ if __name__ == "__main__":
     analogies_scores['glove'] = {}
     analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs, verbose=True)
     analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500, verbose=True)
-
-    # TODO call analogy  figure
     plot_analogies(analogies_scores)

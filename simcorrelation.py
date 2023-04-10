@@ -37,7 +37,7 @@ def sim_correlations(wordpairs, sim_scores, kvecs_list):
 
 
 
-def plot_similarities(correlation_scores, filename='correlations.pdf'):
+def plot_similarities(correlation_scores, filename='figs/correlations.png'):
     """
     Plot the word similarity correlation scores
     :param correlation_scores: nested dictionary storing correlation scores
