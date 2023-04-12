@@ -3,7 +3,7 @@ on word vectors.
 
 Representation of perfomances on similarity correlations.
 
-![Similarity Correlations](https://github.com/semlab/wv-reduce/raw/master/figs/analogies.png)
+![Similarity Correlations](https://github.com/semlab/wv-reduce/raw/master/figs/correlations.png)
 
 Illustration of performances on word analogy.
 
