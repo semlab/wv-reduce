@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import gensim
 import matplotlib.pyplot as plt
+import json
 from scipy import stats
 from gensim.models import KeyedVectors
 from gensim.test.utils import datapath
@@ -66,6 +67,34 @@ def plot_similarities(correlation_scores, filename='figs/correlations.png'):
     fig.tight_layout()
     plt.savefig(filename)
     plt.show()
+
+
+def run_8b_vocab(vec_root_path, kvecs_store):
+    """
+    :param vec_root_path: vectors root folder
+    """
+    #load vectors
+    #args['vectors_root'] = './8billion'
+    dimensions = list(range(50, 1050, 50))
+    print("loading glove vectors...")
+    glove_kvecs_store = ds.load_keyedvectors(os.path.join(vec_root_path, 'glove'), dimensions=dimensions)
+    glove_trained_kvecs = [glove_kvecs_store[dim]['train'] for dim in glove_kvecs_store]
+    glove_reduced_kvecs = [glove_kvecs_store[1000]['pca'][reduced_dim] for reduced_dim in glove_kvecs_store[1000]['pca']]
+    #TODO continue
+
+
+
+    correlation_scores['glove'] = {}
+    correlation_scores['glove']['men'] = {}
+    correlation_scores['glove']['men']['train'] = sim_correlations(men_pairs, men_scores, glove_trained_kvecs)
+    correlation_scores['glove']['men']['pca'] = sim_correlations(men_pairs, men_scores, glove_reduced_kvecs)
+    correlation_scores['glove']['simlex'] = {}
+    correlation_scores['glove']['simlex']['train'] = sim_correlations(simlex_pairs, simlex_scores, glove_trained_kvecs)
+    correlation_scores['glove']['simlex']['pca'] = sim_correlations(simlex_pairs, simlex_scores, glove_reduced_kvecs)
+    correlation_scores['glove']['wordsim'] = {}
+    correlation_scores['glove']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_trained_kvecs)
+    correlation_scores['glove']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_reduced_kvecs)
+
 
 
 if __name__ == "__main__":
@@ -133,5 +162,8 @@ if __name__ == "__main__":
     correlation_scores['glove']['wordsim']['train'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_trained_kvecs)
     correlation_scores['glove']['wordsim']['pca'] = sim_correlations(wordsim_pairs, wordsim_scores, glove_reduced_kvecs_500)
 
-    plot_similarities(correlation_scores)
+    scores_json = json.dumps(correlation_scores)
+    with open("correlations-scores.json", 'w') as f:
+        f.write(scores_json)
+    plot_similarities(correlation_scores, filename='figs/correlations.pdf')
     # TODO todo add args output

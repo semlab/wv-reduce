@@ -4,4 +4,6 @@
 *.pyc
 
 data
-out
+vectors
+output
+__pycache__

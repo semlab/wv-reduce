@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import gensim
 import matplotlib.pyplot as plt
+import json
 from scipy import stats
 from gensim.models import KeyedVectors
 from gensim.test.utils import datapath
@@ -125,4 +126,7 @@ if __name__ == "__main__":
     analogies_scores['glove'] = {}
     analogies_scores['glove']['train'] = analogy_accuracies(qa_df, glove_trained_kvecs, verbose=True)
     analogies_scores['glove']['pca'] = analogy_accuracies(qa_df, glove_reduced_kvecs_500, verbose=True)
-    plot_analogies(analogies_scores)
+    scores_json = json.dumps(analogies_scores)
+    with open("analogies_scores.json", 'w') as f:
+        f.write(scores_json)
+    plot_analogies(analogies_scores,filename="figs/analogies.pdf")

@@ -5,12 +5,13 @@ model=$1
 WORD2VEC=../../opensrc/word2vec
 GLOVE=../../opensrc/GloVe
 
-OUTPUT_DIR=out/$model/train
+OUTPUT_DIR=vectors/8billion/$model/train
 
 BIN_DIR=$WORD2VEC/bin
 CBOW=0
 
-CORPUS=data/text8
+#CORPUS=data/text8
+CORPUS=data/text-data-phrase2.txt
 VOCAB_FILE=out/$1/vocab.txt
 COOCCURRENCE_FILE=out/$1/cooccurrence.bin
 COOCCURRENCE_SHUF_FILE=out/$1/cooccurrence.shuf.bin
@@ -26,6 +27,9 @@ BINARY=0
 NUM_THREADS=15
 X_MAX=10
 
+if [ ! -d $OUTPUT_DIR ]; then
+	mkdir -p $OUTPUT_DIR
+fi
 
 
 
@@ -53,7 +57,7 @@ train_glove(){
 		-input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX \
 		-iter $MAX_ITER -vector-size $vector_size -binary $BINARY \
 		-vocab-file $VOCAB_FILE -verbose $VERBOSE"
-	/usr/bin/time -f "%C - %E" -a -o log.txt \
+	/usr/bin/time -f "%C - %E" -a -o log-$model.txt \
 			$BUILDDIR/glove -save-file $output_file \
 			-threads $NUM_THREADS \
 			-input-file $COOCCURRENCE_SHUF_FILE \
@@ -69,8 +73,8 @@ train_glove(){
 
 train_word2vec(){
 	output_file=$OUTPUT_DIR/$model-$vector_size.txt
-	echo "Training size: $vector_size, save to: $vector_data"
-	/usr/bin/time -f "%C - %E" -a -o log.txt \
+	echo "Training size: $vector_size, save to: $output_file"
+	/usr/bin/time -f "%C - %E" -a -o log-$model.txt \
 			$BIN_DIR/word2vec -train $CORPUS \
 			-output $output_file \
 			-cbow $CBOW \
@@ -137,7 +141,7 @@ else
 	exit 1
 fi
 
-for (( vector_size=50; vector_size<=500; vector_size+=50 ))
+for (( vector_size=50; vector_size<=1000; vector_size+=50 ))
 do 
 	training
 done 
